@@ -1,0 +1,305 @@
+[
+    {
+        "id": "e58c2802242a1f1e",
+        "type": "tab",
+        "label": "Flow 1",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "de45c7f5e8e5de1d",
+        "type": "inject",
+        "z": "e58c2802242a1f1e",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 160,
+        "y": 140,
+        "wires": [
+            [
+                "80e74c2e7d2418d0"
+            ]
+        ]
+    },
+    {
+        "id": "80e74c2e7d2418d0",
+        "type": "function",
+        "z": "e58c2802242a1f1e",
+        "name": "function 1",
+        "func": "msg.payload = {\n    rpm: 1000,\n    feed: 20,\n    temperature: 20,\n    time: new Date()\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 420,
+        "y": 140,
+        "wires": [
+            [
+                "32513cb9d4223545"
+            ]
+        ]
+    },
+    {
+        "id": "32513cb9d4223545",
+        "type": "mongodb out",
+        "z": "e58c2802242a1f1e",
+        "mongodb": "0f3874828d79df21",
+        "name": "MongoDB Insert",
+        "collection": "machineData",
+        "payonly": true,
+        "upsert": false,
+        "multi": false,
+        "operation": "store",
+        "x": 620,
+        "y": 140,
+        "wires": []
+    },
+    {
+        "id": "5af6e75322c0a3d3",
+        "type": "inject",
+        "z": "e58c2802242a1f1e",
+        "name": "Daily 24 Hours Trigger",
+        "props": [
+            {
+                "p": "payload"
+            },
+            {
+                "p": "topic",
+                "vt": "str"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 240,
+        "y": 240,
+        "wires": [
+            [
+                "79edd162a71d0d1b"
+            ]
+        ]
+    },
+    {
+        "id": "79edd162a71d0d1b",
+        "type": "function",
+        "z": "e58c2802242a1f1e",
+        "name": "function 2",
+        "func": "let now = new Date();\nlet last24 = new Date(now.getTime() - 24*60*60*1000);\n\n// Mongo query\nmsg.payload = {\n    time: { $gte: last24 } \n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 480,
+        "y": 240,
+        "wires": [
+            [
+                "0d4d98b3de6f99dc"
+            ]
+        ]
+    },
+    {
+        "id": "0d4d98b3de6f99dc",
+        "type": "mongodb in",
+        "z": "e58c2802242a1f1e",
+        "mongodb": "a42cd99fa7a93a10",
+        "name": "Last 24 Hours Fetch",
+        "collection": "machineData",
+        "operation": "find",
+        "x": 700,
+        "y": 240,
+        "wires": [
+            [
+                "1a97e4833639a4e8"
+            ]
+        ]
+    },
+    {
+        "id": "1a97e4833639a4e8",
+        "type": "function",
+        "z": "e58c2802242a1f1e",
+        "name": "function 3",
+        "func": "let data = msg.payload;\n\n// PDF Table Header\nlet body = [\n    [\"Sr\", \"RPM\", \"Feed\", \"Temp\", \"Time\"]\n];\n\n// Table rows\nfor (let i = 0; i < data.length; i++) {\n    body.push([\n        i + 1,\n        data[i].rpm || \"NA\",\n        data[i].feed || \"NA\",\n        data[i].temperature || \"NA\",\n        new Date(data[i].time).toLocaleString()\n    ]);\n}\n\n// pdfmake document\nmsg.payload = {\n    content: [\n        { text: \"Lathe Machine 24 Hours Report\", style: \"header\" },\n        \"\\n\",\n        {\n            table: {\n                headerRows: 1,\n                widths: [\"auto\", \"auto\", \"auto\", \"auto\", \"auto\"],\n                body: body\n            }\n        }\n    ],\n    styles: {\n        header: {\n            fontSize: 16,\n            bold: true\n        }\n    }\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 100,
+        "y": 320,
+        "wires": [
+            [
+                "4a14015cc1c591cc"
+            ]
+        ]
+    },
+    {
+        "id": "4a14015cc1c591cc",
+        "type": "pdfmake",
+        "z": "e58c2802242a1f1e",
+        "name": "",
+        "outputType": "base64",
+        "inputProperty": "payload",
+        "options": "{}",
+        "outputProperty": "payload",
+        "x": 300,
+        "y": 320,
+        "wires": [
+            [
+                "6f63c78cf69ec9d4"
+            ]
+        ]
+    },
+    {
+        "id": "6f63c78cf69ec9d4",
+        "type": "function",
+        "z": "e58c2802242a1f1e",
+        "name": "function 4",
+        "func": "var pdfBase64 = msg.payload;\n\n// Email Text\nmsg.payload = \"Attached last 24 hours Lathe Machine Report PDF\";\n\n// Email Subject\nmsg.topic = \"24 Hours Lathe Machine Report\";\n\n// Convert Base64 → Binary Buffer\nmsg.attachments = [\n    {\n        filename: \"24_hours_report.pdf\",\n        content: Buffer.from(pdfBase64, \"base64\"),\n        contentType: \"application/pdf\"\n    }\n];\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 500,
+        "y": 320,
+        "wires": [
+            [
+                "9df711c00574b075"
+            ]
+        ]
+    },
+    {
+        "id": "9df711c00574b075",
+        "type": "e-mail",
+        "z": "e58c2802242a1f1e",
+        "server": "smtp.gmail.com",
+        "port": "465",
+        "secure": true,
+        "tls": false,
+        "name": "krishnashrangare@gmail.com",
+        "dname": "Send 24 Hours Report",
+        "x": 740,
+        "y": 320,
+        "wires": []
+    },
+    {
+        "id": "0311176d13826660",
+        "type": "http in",
+        "z": "e58c2802242a1f1e",
+        "name": "",
+        "url": "/latheData",
+        "method": "get",
+        "upload": false,
+        "skipBodyParsing": false,
+        "swaggerDoc": "",
+        "x": 120,
+        "y": 440,
+        "wires": [
+            [
+                "5c6a53bafbf7be3e"
+            ]
+        ]
+    },
+    {
+        "id": "5c6a53bafbf7be3e",
+        "type": "function",
+        "z": "e58c2802242a1f1e",
+        "name": "function 5",
+        "func": "let now = new Date();\nlet last24 = new Date(now.getTime() - 24 * 60 * 60 * 1000);\n\nmsg.payload = {\n    time: { $gte: last24 }\n};\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 300,
+        "y": 440,
+        "wires": [
+            [
+                "a6f21b946bc55d4a"
+            ]
+        ]
+    },
+    {
+        "id": "a6f21b946bc55d4a",
+        "type": "mongodb in",
+        "z": "e58c2802242a1f1e",
+        "mongodb": "0f3874828d79df21",
+        "name": "Last 24 Hours Fetch",
+        "collection": "machineData",
+        "operation": "find",
+        "x": 520,
+        "y": 440,
+        "wires": [
+            [
+                "dfb403b406639d5f"
+            ]
+        ]
+    },
+    {
+        "id": "dfb403b406639d5f",
+        "type": "http response",
+        "z": "e58c2802242a1f1e",
+        "name": "",
+        "statusCode": "",
+        "headers": {},
+        "x": 710,
+        "y": 440,
+        "wires": []
+    },
+    {
+        "id": "0f3874828d79df21",
+        "type": "mongodb",
+        "hostname": "127.0.0.1",
+        "topology": "direct",
+        "connectOptions": "",
+        "port": 27017,
+        "db": "SensorData",
+        "name": ""
+    },
+    {
+        "id": "a42cd99fa7a93a10",
+        "type": "mongodb",
+        "hostname": "127.0.0.1",
+        "topology": "direct",
+        "connectOptions": "",
+        "port": 27017,
+        "db": "SensorData",
+        "name": ""
+    },
+    {
+        "id": "f0fd191d95687aef",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "@pafum/node-red-node-mongodb": "0.2.5",
+            "node-red-contrib-pdfmake2": "2.0.0",
+            "node-red-node-email-variable": "1.1.7"
+        }
+    }
+]
