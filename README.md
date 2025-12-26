@@ -22,7 +22,7 @@ Node-RED → API → Grafana Visualization
 ## 🖼️ Project Screenshots
 
 ### ✅ Grafana Dashboard
-![Grafana Dashboard](images/grafana-dashboard.png)
+![Grafana Dashboard](images/imagesgrafana_dashboard.png)
 
 ---
 
