@@ -1,229 +1,148 @@
-🛠️ Lathe Machine Monitoring using Node-RED, MongoDB, Email PDF & Grafana
+# 🛠️ Lathe Machine Monitoring using Node-RED, MongoDB, Email PDF & Grafana
 
-This project monitors Lathe Machine sensor parameters (RPM, Feed, Temperature etc.) using Node-RED, stores data into MongoDB, automatically deletes data older than 5 days, sends Auto PDF Report every 24 Hours via Email, and visualizes live data in Grafana Dashboard.
+This project monitors **Lathe Machine Parameters** like **RPM, Feed & Temperature** using Node-RED, stores data into MongoDB, automatically deletes records older than 5 days, sends **Auto PDF Report every 24 Hours via Email**, and visualizes live machine data in **Grafana Dashboard**.
 
-✨ Features
+---
 
-✔ Collect Machine Data using Node-RED
-✔ Store data into MongoDB Database
-✔ Automatically delete records older than 5 days
-✔ Automatically generate PDF Report every 24 Hours
-✔ Send PDF to Gmail automatically
-✔ Provide REST API /latheData to fetch last 24 hrs data
-✔ Connect MongoDB to Grafana
-✔ Display Data in Grafana Graph Dashboard
+## 📌 Project Architecture
+- Node-RED generates sensor data (or accepts real sensors)
+- Stores data in **MongoDB**
+- Deletes records older than 5 days Automatically
+- Fetches last 24 hours data → Converts to PDF
+- Sends PDF on Email using Gmail SMTP
+- Provides API → `/latheData`
+- Grafana uses API to display live charts
 
-🧰 Tech Stack
+Node-RED → MongoDB → Auto Clean Data  
+Node-RED → PDF → Gmail Auto Report  
+Node-RED → API → Grafana Visualization  
 
-Node-RED
+---
 
-MongoDB
+## 🖼️ Project Screenshots
 
-Grafana
+### ✅ Grafana Dashboard
+![Grafana Dashboard](images/grafana-dashboard.png)
 
-PDFMake Node
+---
 
-Gmail SMTP
+### ✅ Node-RED Flow
+![NodeRED Flow](images/nodered-flow.png)
 
-JSON API
+---
 
-JavaScript
+### ✅ MongoDB Data
+![MongoDB Data](images/mongodb.png)
 
-✅ 1️⃣ MongoDB Setup
-🔹 Install MongoDB
+---
 
-Download & Install
-https://www.mongodb.com/try/download/community
+## 🚀 Features
+✔ Store Machine Data in MongoDB  
+✔ Auto Delete Data older than **5 Days**  
+✔ Auto PDF Report Every **24 Hours**  
+✔ Email report automatically  
+✔ REST API for Data Access  
+✔ Grafana dashboard visualization  
 
-🔹 Start MongoDB Service
+---
 
-Ensure MongoDB running:
+## ⚙️ Software Used
+- Node-RED  
+- MongoDB  
+- MongoDB Compass  
+- Grafana  
+- Gmail SMTP  
+- Yesoreyeram Infinity Datasource Plugin  
 
-mongodb://127.0.0.1:27017
+---
 
-🔹 Create Database & Collection
+## 🧩 Node-RED Packages Installed
+Go to → Manage Palette → Install:
 
-Database: SensorData
-Collection: machineData
+node-red-node-email  
+node-red-contrib-pdfmake2  
+node-red-node-mongodb  
 
-✅ 2️⃣ Node-RED Setup
-🔹 Install Node-RED
-npm install -g node-red
+---
 
-🔹 Start Node-RED
-node-red
+## 🗄️ MongoDB Setup
+Database:
+SensorData  
 
+Collection:
+machineData  
 
-Open in browser
-👉 http://localhost:1880
+---
 
-🔗 Required Node-RED Nodes
-
-Install these:
-
-node-red-node-email
-node-red-node-mongodb
-node-red-contrib-pdfmake2
-
-📥 Import Project Flow
-
-1️⃣ Open Node-RED
-2️⃣ Click Menu → Import
-3️⃣ Paste your exported JSON Flow
-4️⃣ Deploy ✔
-
-🧾 Data Insert to MongoDB (Manual / Live)
-
-Function Node code:
-
+## 📥 Data Insert Example (Node-RED Function Node)
 msg.payload = {
-    rpm: 1000,
-    feed: 20,
-    temperature: 20,
-    time: new Date()
+ rpm: 1000,
+ feed: 60,
+ temperature: 80,
+ time: new Date()
 };
 return msg;
 
+---
 
-This data goes into MongoDB:
-
-SensorData → machineData
-
-🗑️ Auto Delete Old Data (5 Days)
-
-MongoDB TTL Index Feature use kiya.
-
-Open MongoDB Shell / Compass Run:
+## 🧹 Auto Delete Old Records (TTL Index)
+Mongo Shell Command:
 db.machineData.createIndex(
-  { "time": 1 },
-  { expireAfterSeconds: 432000 }
+ { "time": 1 },
+ { expireAfterSeconds: 432000 }   // 5 Days
 )
 
+---
 
-432000 seconds = 5 days
+## 📧 Automatic PDF Email Every 24 Hours
+✔ Inject Node → Every 24 Hours  
+✔ Fetch Last 24 Hours Data  
+✔ Generate PDF using pdfmake  
+✔ Send Email with PDF Attachment via Gmail SMTP  
 
-🔹 Now MongoDB will automatically delete old data
-No cron job needed
-No Node-RED logic needed ✔
+This automation is implemented in Node-RED flow.
 
-📧 Auto Email PDF Every 24 Hours
-🔹 Daily Trigger Inject Node
+---
 
-Set:
+## 🌐 API Endpoint (Used by Grafana)
+Open in Browser:
+http://localhost:1880/latheData  
 
-Repeat → at specific time
-24 hours interval
+Returns JSON of last 24 hours records.
 
-🔹 Query Last 24 Hours Data
+---
 
-Function Node
+## 📊 Grafana Integration (FREE)
 
-let now = new Date();
-let last24 = new Date(now.getTime() - 24*60*60*1000);
+Install Plugin:
+yesoreyeram-infinity-datasource  
 
-msg.payload = {
-    time: { $gte: last24 }
-};
-return msg;
+Create Data Source:
+URL: http://localhost:1880/latheData  
+Type: JSON  
+Parser: JSONata  
+Format: Table  
 
-🔹 MongoDB Node
+Map Columns:
+time → Time  
+rpm → Number  
+temperature → Number  
+feed → Number  
 
-Operation: find
-Collection: machineData
+Dashboard Ready 🎯
 
-🧾 Generate PDF Report
+---
 
-Function Node:
+## 🙌 Author
+**Krishna Shrangare**  
+Lathe Machine Monitoring | Full Stack | Automation Enthusiast  
 
-Makes table
+---
 
-Arranges data
-
-Prepare pdf structure
-
-PDFMake node converts into PDF.
-
-📤 Send Email with PDF
-
-Email Node:
-
-Server: smtp.gmail.com
-Port: 465
-Use Secure: True
-Username: your gmail
-Password: App Password
-
-
-⚠️ Use Gmail App Password (not real password)
-
-🌐 REST API for Last 24 Hours Data
-
-GET:
-
-http://localhost:1880/latheData
+## ⭐ Support
+If you like the project  
+⭐ Star the Repo  
+🔁 Fork  
+❤️ Share
 
 
-Returns Mongo Data JSON
-Useful for Apps / Web UI
-
-📊 Grafana Setup
-1️⃣ Install Grafana
-
-Download:
-https://grafana.com/grafana/download
-
-Run Grafana & Open:
-
-http://localhost:3000
-
-🔗 Connect MongoDB to Grafana
-
-Grafana does not support MongoDB directly,
-So we used:
-
-Infinity datasource plugin
-
-Steps:
-
-1️⃣ Go to Grafana
-2️⃣ Connections → Add Data Source
-3️⃣ Select → Infinity Plugin
-4️⃣ Mode: URL
-5️⃣ URL:
-
-http://localhost:1880/latheData
-
-
-6️⃣ Format → JSON
-7️⃣ Parser → JSONata
-8️⃣ Save ✔
-
-📉 Create Dashboard Panel
-
-1️⃣ Create New Dashboard
-2️⃣ Add Panel
-3️⃣ Select Infinity datasource
-4️⃣ Select Time field
-5️⃣ Convert fields:
-
-time → Time
-
-rpm → Number
-
-temperature → Number
-
-feed → Number
-
-🎯 Final Output You Get
-
-✔ Data storing in Database
-✔ Old data auto deleted (5 Days)
-✔ Auto Email PDF Every Day
-✔ Live Graph Dashboard
-✔ REST API Ready
-✔ Easily Scalable Project
-
-👨‍💻 Developer
-
-Krishna Shrangare
-Full Stack / IoT Developer
